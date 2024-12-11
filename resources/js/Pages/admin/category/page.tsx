@@ -3,7 +3,7 @@ import { PageProps } from "@/types";
 import { Head, usePage } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import { DataTableCategory } from "@/Components/datatable/DataTableCategory";
-import { Tag } from "lucide-react";
+import { saveData, getData } from "@/lib/indexedDb";
 
 interface FlashType extends PageProps {
     flash: {
@@ -66,18 +66,45 @@ export default function DeliveryDashboard({
         });
     }, [flash]);
 
+    // useEffect(() => {
+    //     const dataCategory = categories.map(
+    //         (category: Category, index: number) => ({
+    //             ...category,
+    //             no: index + 1,
+    //             id_kategori: category.category_id,
+    //             nama_kategori: category.category_name,
+    //             tipe_kategori: category.category_type,
+    //         })
+    //     );
+    //     setData(dataCategory);
+    // }, []);
+
     useEffect(() => {
-        const dataCategory = categories.map(
-            (category: Category, index: number) => ({
-                ...category,
-                no: index + 1,
-                id_kategori: category.category_id,
-                nama_kategori: category.category_name,
-                tipe_kategori: category.category_type,
-            })
-        );
-        setData(dataCategory);
-    }, []);
+        const saveToIndexedDB = async () => {
+            const dataCategory = categories.map(
+                (category: Category, index: number) => ({
+                    ...category,
+                    no: index + 1,
+                    id_kategori: category.category_id,
+                    nama_kategori: category.category_name,
+                    tipe_kategori: category.category_type,
+                })
+            );
+            await saveData("categories", dataCategory);
+            setData(dataCategory);
+        };
+
+        const fetchFromIndexedDB = async () => {
+            const storedData = await getData("categories");
+            if (storedData.length > 0) {
+                setData(storedData);
+            } else {
+                saveToIndexedDB();
+            }
+        };
+
+        fetchFromIndexedDB();
+    }, [categories]);
 
     return (
         <AdminLayout

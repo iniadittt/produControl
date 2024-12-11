@@ -3,6 +3,7 @@ import { PageProps } from "@/types";
 import { Head, usePage } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import { DataTableStock } from "@/Components/datatable/DataTableStock";
+import { saveData, getData } from "@/lib/indexedDb";
 
 interface FlashType extends PageProps {
     flash: {
@@ -30,6 +31,7 @@ export default function StockDashboard({
     appTitle,
     nameUser,
     roleUser,
+    search,
     products,
     allCategory,
     allTag,
@@ -38,6 +40,7 @@ export default function StockDashboard({
     appTitle: string;
     nameUser: string;
     roleUser: string;
+    search: string;
     products: Product[];
     allCategory: { value: string; label: string }[];
     allTag: { value: string; label: string }[];
@@ -57,19 +60,47 @@ export default function StockDashboard({
         });
     }, [flash]);
 
+    // useEffect(() => {
+    //     const dataProduction = products.map((product, index) => ({
+    //         ...product,
+    //         no: index + 1,
+    //         sku: product.sku,
+    //         nama_produk: product.product_name,
+    //         kategori: product.category_name,
+    //         tags: product.tags,
+    //         jumlah: product.product_quantity,
+    //         harga: product.product_price,
+    //     }));
+    //     setData(dataProduction);
+    // }, []);
+
     useEffect(() => {
-        const dataProduction = products.map((product, index) => ({
-            ...product,
-            no: index + 1,
-            sku: product.sku,
-            nama_produk: product.product_name,
-            kategori: product.category_name,
-            tags: product.tags,
-            jumlah: product.product_quantity,
-            harga: product.product_price,
-        }));
-        setData(dataProduction);
-    }, []);
+        const saveToIndexedDB = async () => {
+            const dataProduction = products.map((product, index) => ({
+                ...product,
+                no: index + 1,
+                sku: product.sku,
+                nama_produk: product.product_name,
+                kategori: product.category_name,
+                tags: product.tags,
+                jumlah: product.product_quantity,
+                harga: product.product_price,
+            }));
+            await saveData("stocks", dataProduction);
+            setData(dataProduction);
+        };
+
+        const fetchFromIndexedDB = async () => {
+            const storedData = await getData("stocks");
+            if (storedData.length > 0) {
+                setData(storedData);
+            } else {
+                saveToIndexedDB();
+            }
+        };
+
+        fetchFromIndexedDB();
+    }, [products]);
 
     return (
         <AdminLayout
@@ -98,6 +129,7 @@ export default function StockDashboard({
                     role={roleUser}
                     allCategory={allCategory}
                     allTag={allTag}
+                    search={search}
                 />
             </div>
         </AdminLayout>

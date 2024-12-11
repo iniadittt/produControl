@@ -328,7 +328,7 @@ export function DataTableCategory({
     });
 
     return (
-        <div className="w-full">
+        <div className="grid grid-cols-1">
             <div className="flex items-center mb-4">
                 <div className="flex flex-col gap-2 w-1/3">
                     <Select
@@ -365,22 +365,6 @@ export function DataTableCategory({
                                     ?.setFilterValue(value)
                             }
                         />
-                        // <Input
-                        //     placeholder="Cari kategori berdasarkan nama..."
-                        //     ref={searchCategory}
-                        //     value={
-                        //         (table
-                        //             .getColumn("nama_kategori")
-                        //             ?.getFilterValue() as string) || ""
-                        //     }
-                        //     onChange={(event) => {
-                        //         const value = event.target.value;
-                        //         table
-                        //             .getColumn("nama_kategori")
-                        //             ?.setFilterValue(value);
-                        //     }}
-                        //     className="max-w-sm"
-                        // />
                     )}
 
                     {filterName === "type" && (
@@ -396,22 +380,6 @@ export function DataTableCategory({
                                     ?.setFilterValue(value)
                             }
                         />
-                        // <Input
-                        //     placeholder="Cari kategori berdasarkan tipe kategori..."
-                        //     ref={searchType}
-                        //     value={
-                        //         (table
-                        //             .getColumn("tipe_kategori")
-                        //             ?.getFilterValue() as string) || ""
-                        //     }
-                        //     onChange={(event) => {
-                        //         const value = event.target.value;
-                        //         table
-                        //             .getColumn("tipe_kategori")
-                        //             ?.setFilterValue(value);
-                        //     }}
-                        //     className="max-w-sm"
-                        // />
                     )}
 
                     {filterName === "tags" && (
@@ -425,20 +393,6 @@ export function DataTableCategory({
                                 table.getColumn("tags")?.setFilterValue(value)
                             }
                         />
-                        // <Input
-                        //         placeholder="Cari kategori berdasarkan nama tags..."
-                        //         ref={searchTags}
-                        //         value={
-                        //             (table
-                        //                 .getColumn("tags")
-                        //                 ?.getFilterValue() as string) || ""
-                        //         }
-                        //         onChange={(event) => {
-                        //             const value = event.target.value;
-                        //             table.getColumn("tags")?.setFilterValue(value);
-                        //         }}
-                        //         className="max-w-sm"
-                        //     />
                     )}
                 </div>
                 <DropdownMenu>
@@ -534,6 +488,26 @@ export function DataTableCategory({
                         {table.getFilteredRowModel().rows.length} Total data
                         kategori.
                     </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                    <div className="space-x-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            Sebelumnya
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            Selanjutnya
+                        </Button>
+                    </div>
                     <div className="text-sm text-muted-foreground">
                         Page{" "}
                         <span className="font-semibold">
@@ -541,24 +515,6 @@ export function DataTableCategory({
                         </span>{" "}
                         dari {table.getPageCount()}.
                     </div>
-                </div>
-                <div className="space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Sebelumnya
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Selanjutnya
-                    </Button>
                 </div>
             </div>
         </div>

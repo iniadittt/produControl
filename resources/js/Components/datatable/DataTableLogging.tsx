@@ -105,7 +105,6 @@ export const columns: ColumnDef<User>[] = [
         cell: ({ row }) => {
             const logAction: string = row.getValue("log_action");
             let badgeColor = "";
-
             switch (logAction) {
                 case "tambah":
                     badgeColor = "bg-green-600 hover:bg-green-700";
@@ -253,6 +252,81 @@ export const columns: ColumnDef<User>[] = [
             );
         },
     },
+    {
+        accessorKey: "Aksi",
+        header: () => {},
+        cell: ({ row }) => {
+            const text: string = row.getValue("log_keterangan");
+            const regex = /\b(ke Production|ke Stock|ke Delivery)\b/;
+            const match = text.match(regex)?.[0] || "";
+            const aksi: string = row.getValue("log_action");
+            const category: string = row.getValue("log_category");
+            let tujuan: string = "";
+            switch (aksi) {
+                case "tambah":
+                    tujuan = category;
+                    break;
+                case "edit":
+                    tujuan = category;
+                    break;
+                case "move":
+                    tujuan = match.split(" ")[1].toLowerCase();
+                    break;
+                case "merge":
+                    tujuan = "stock";
+                    break;
+                case "retur":
+                    tujuan = match.split(" ")[1].toLowerCase();
+                    break;
+                case "hapus":
+                    tujuan = "";
+                    break;
+                default:
+                    break;
+            }
+            const sku: string = row.getValue("log_sku");
+            const resiRegex = /Nomor Nomor Invoice: ([\w-_]+)/;
+            const resi = text.match(resiRegex);
+            let invoice = "";
+            if (resi && resi[1]) {
+                invoice = resi[1];
+            }
+            return aksi === "hapus" ? (
+                <p></p>
+            ) : // : aksi === "move" && tujuan === "delivery" ? (
+            //     <Link
+            //         className="text-nowrap pr-6 text-blue-600 hover:text-blue-700 hover:underline"
+            //         href={route("delivery.show", { search: sku, isSku: true })}
+            //     >
+            //         Lihat data
+            //     </Link>
+            // )
+            tujuan === "production" ? (
+                <Link
+                    className="text-nowrap pr-6 text-blue-600 hover:text-blue-700 hover:underline"
+                    href={route("production.show", { search: sku })}
+                >
+                    Lihat data
+                </Link>
+            ) : tujuan === "stock" ? (
+                <Link
+                    className="text-nowrap pr-6 text-blue-600 hover:text-blue-700 hover:underline"
+                    href={route("stock.show", { search: sku })}
+                >
+                    Lihat data
+                </Link>
+            ) : tujuan === "delivery" ? (
+                <Link
+                    className="text-nowrap pr-6 text-blue-600 hover:text-blue-700 hover:underline"
+                    href={route("delivery.show", { search: invoice })}
+                >
+                    Lihat data
+                </Link>
+            ) : (
+                <p></p>
+            );
+        },
+    },
 ];
 
 type FilterType = "user_name" | "log_action" | "log_category" | "log_sku" | "";
@@ -308,7 +382,7 @@ export function DataTableLogging({ data }: { data: any[] }) {
     });
 
     return (
-        <div className="w-full">
+        <div className="grid grid-cols-1">
             <div className="flex items-center mb-4">
                 <div className="flex flex-col gap-2 w-1/3">
                     <Select
@@ -397,6 +471,7 @@ export function DataTableLogging({ data }: { data: any[] }) {
                                     <SelectItem value="edit">Ubah</SelectItem>
                                     <SelectItem value="move">Move</SelectItem>
                                     <SelectItem value="merge">Merge</SelectItem>
+                                    <SelectItem value="retur">Retur</SelectItem>
                                     <SelectItem value="hapus">Hapus</SelectItem>
                                 </SelectGroup>
                             </SelectContent>
@@ -455,16 +530,18 @@ export function DataTableLogging({ data }: { data: any[] }) {
                                 const text =
                                     columnNames[column.id] || column.id;
                                 return (
-                                    <DropdownMenuCheckboxItem
-                                        key={text}
-                                        className="capitalize cursor-pointer"
-                                        checked={column.getIsVisible()}
-                                        onCheckedChange={(value) =>
-                                            column.toggleVisibility(!!value)
-                                        }
-                                    >
-                                        {text}
-                                    </DropdownMenuCheckboxItem>
+                                    text !== "Aksi" && (
+                                        <DropdownMenuCheckboxItem
+                                            key={text}
+                                            className="capitalize cursor-pointer"
+                                            checked={column.getIsVisible()}
+                                            onCheckedChange={(value) =>
+                                                column.toggleVisibility(!!value)
+                                            }
+                                        >
+                                            {text}
+                                        </DropdownMenuCheckboxItem>
+                                    )
                                 );
                             })}
                     </DropdownMenuContent>
@@ -534,6 +611,26 @@ export function DataTableLogging({ data }: { data: any[] }) {
                     <div className="flex-1 text-sm text-muted-foreground">
                         {table.getFilteredRowModel().rows.length} Total log.
                     </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                    <div className="space-x-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            Sebelumnya
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            Selanjutnya
+                        </Button>
+                    </div>
                     <div className="text-sm text-muted-foreground">
                         Page{" "}
                         <span className="font-semibold">
@@ -541,24 +638,6 @@ export function DataTableLogging({ data }: { data: any[] }) {
                         </span>{" "}
                         dari {table.getPageCount()}.
                     </div>
-                </div>
-                <div className="space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Sebelumnya
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Selanjutnya
-                    </Button>
                 </div>
             </div>
         </div>

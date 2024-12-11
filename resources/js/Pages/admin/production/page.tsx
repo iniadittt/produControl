@@ -3,6 +3,7 @@ import AdminLayout from "@/Layouts/AdminLayout";
 import { Head, usePage } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import { DataTableProduct } from "@/Components/datatable/DataTableProduct";
+import { saveData, getData } from "@/lib/indexedDb";
 
 interface FlashType extends PageProps {
     flash: {
@@ -29,6 +30,7 @@ export default function ProductDashboard({
     appTitle,
     nameUser,
     roleUser,
+    search,
     products,
     allCategory,
     allTag,
@@ -37,6 +39,7 @@ export default function ProductDashboard({
     appTitle: string;
     nameUser: string;
     roleUser: string;
+    search: string;
     products: Product[];
     allCategory: { value: string; label: string }[];
     allTag: { value: string; label: string }[];
@@ -56,20 +59,45 @@ export default function ProductDashboard({
         });
     }, [flash]);
 
-    useEffect(() => {
-        const dataProduction = products.map((product, index) => ({
-            ...product,
-            no: index + 1,
-            sku: product.sku,
-            nama_produk: product.product_name,
-            kategori: product.category_name,
-            tags: product.tags,
-            jumlah: product.product_quantity,
-        }));
-        setData(dataProduction);
-    }, []);
+    // useEffect(() => {
+    //     const dataProduction = products.map((product, index) => ({
+    //         ...product,
+    //         no: index + 1,
+    //         sku: product.sku,
+    //         nama_produk: product.product_name,
+    //         kategori: product.category_name,
+    //         tags: product.tags,
+    //         jumlah: product.product_quantity,
+    //     }));
+    //     setData(dataProduction);
+    // }, []);
 
-    console.log({ appName, appTitle });
+    useEffect(() => {
+        const saveToIndexedDB = async () => {
+            const dataProduction = products.map((product, index) => ({
+                ...product,
+                no: index + 1,
+                sku: product.sku,
+                nama_produk: product.product_name,
+                kategori: product.category_name,
+                tags: product.tags,
+                jumlah: product.product_quantity,
+            }));
+            await saveData("productions", dataProduction);
+            setData(dataProduction);
+        };
+
+        const fetchFromIndexedDB = async () => {
+            const storedData = await getData("productions");
+            if (storedData.length > 0) {
+                setData(storedData);
+            } else {
+                saveToIndexedDB();
+            }
+        };
+
+        fetchFromIndexedDB();
+    }, []);
 
     return (
         <AdminLayout
@@ -97,6 +125,7 @@ export default function ProductDashboard({
                     role={roleUser}
                     allCategory={allCategory}
                     allTag={allTag}
+                    search={search}
                 />
             </div>
         </AdminLayout>

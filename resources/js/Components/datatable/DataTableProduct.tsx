@@ -415,11 +415,13 @@ export function DataTableProduct({
     role,
     allCategory: ALLCATEGORY,
     allTag: ALLTAG,
+    search,
 }: {
     data: Product[];
     role: string;
     allCategory: CatTagType[];
     allTag: CatTagType[];
+    search: string;
 }) {
     const QUANTITY_PRODUCT = data
         .map((item) => item.product_quantity)
@@ -434,6 +436,8 @@ export function DataTableProduct({
         (item: CatTagType, index: number, self) =>
             index === self.findIndex((x) => x.value === item.value)
     );
+
+    console.log({ search });
 
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
@@ -453,6 +457,10 @@ export function DataTableProduct({
     const searchMaxJumlah = React.useRef<HTMLInputElement>(null);
 
     React.useEffect(() => {
+        if (search) setFilterName("sku");
+    }, []);
+
+    React.useEffect(() => {
         if (searchSku.current) searchSku.current.value = "";
         if (searchName.current) searchName.current.value = "";
         if (searchCategory.current) searchCategory.current.value = "";
@@ -468,6 +476,8 @@ export function DataTableProduct({
         table.getColumn("kategori")?.setFilterValue("");
         table.getColumn("tags")?.setFilterValue("");
         table.getColumn("jumlah")?.setFilterValue(["", ""]);
+
+        if (search) table.getColumn("sku")?.setFilterValue(search);
     }, [filterName]);
 
     const table = useReactTable({
@@ -498,7 +508,7 @@ export function DataTableProduct({
     });
 
     return (
-        <div className="w-full">
+        <div className="grid grid-cols-1">
             <div className="flex items-center mb-4">
                 <div className="flex flex-col gap-2 w-full">
                     <Select
@@ -748,6 +758,26 @@ export function DataTableProduct({
                         {table.getFilteredRowModel().rows.length} Total data
                         production dengan jumlah {QUANTITY_PRODUCT} product.
                     </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                    <div className="space-x-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            Sebelumnya
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            Selanjutnya
+                        </Button>
+                    </div>
                     <div className="text-sm text-muted-foreground">
                         Page{" "}
                         <span className="font-semibold">
@@ -755,24 +785,6 @@ export function DataTableProduct({
                         </span>{" "}
                         dari {table.getPageCount()}.
                     </div>
-                </div>
-                <div className="space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Sebelumnya
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Selanjutnya
-                    </Button>
                 </div>
             </div>
         </div>

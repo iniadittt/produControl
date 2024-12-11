@@ -23,9 +23,10 @@ class DeliveryReturRequest extends FormRequest
     {
         return [
             'delivery_id' => ['required', 'integer', 'min:1'],
-            'stock_id' => ['required', 'integer', 'min:1'],
-            'category_id' => ['required', 'integer', 'min:1'],
+            'tujuan_id' => ['required', 'integer', 'min:1'],
+            'tujuan' => ['required', 'string', 'min:1'],
             'quantity' => ['required', 'integer', 'min:1'],
+            'category_id' => ['required', 'integer', 'min:1'],
             'tags' => ['required', 'array'],
         ];
     }

@@ -67,7 +67,7 @@ export default function ProductMoveDashboard({
     }>({
         production_id: product.production_id,
         sku: product.sku,
-        category_id: null,
+        category_id: categoriesWithTags[0].id,
         tags: [],
         quantity: 0,
         price: 0,
@@ -185,7 +185,10 @@ export default function ProductMoveDashboard({
 
                     <div className="grid w-full max-w-sm items-center gap-2">
                         <Label htmlFor="category">Kategori</Label>
-                        <Select onValueChange={changeCategoryId}>
+                        <Select
+                            onValueChange={changeCategoryId}
+                            value={data.category_id?.toString()}
+                        >
                             <SelectTrigger>
                                 <SelectValue placeholder="Pilih kategori produk" />
                             </SelectTrigger>

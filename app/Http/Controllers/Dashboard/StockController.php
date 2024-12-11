@@ -47,48 +47,41 @@ class StockController extends Controller
 
     public function api_check_production_exist(CheckStockExistRequest $request)
     {
-        try {
-            $productData = $request->validated();
-            $tags = $productData['tags'] ?? [];
-            $categoryQuery = DB::table('selected_stock_category')
-                ->join('stock', 'selected_stock_category.stock_id', '=', 'stock.id')
-                ->join('master_data', 'stock.master_id', '=', 'master_data.id')
-                ->select('selected_stock_category.stock_id as stock_id')
-                ->where('master_data.sku', '=', $productData['sku'])
-                ->where('selected_stock_category.category_id', '=', $productData['category_id'])
-                ->whereExists(function ($query) use ($tags) {
-                    $query->select(DB::raw(1))
-                        ->from('selected_stock_category as spc')
-                        ->whereColumn('spc.stock_id', 'selected_stock_category.stock_id')
-                        ->whereIn('spc.tag_id', $tags)
-                        ->groupBy('spc.stock_id')
-                        ->havingRaw('COUNT(DISTINCT spc.tag_id) = ?', [count($tags)])
-                        ->havingRaw('COUNT(DISTINCT spc.tag_id) = (SELECT COUNT(DISTINCT tag_id) FROM selected_stock_category WHERE stock_id = spc.stock_id)');
-                });
-            $category = $categoryQuery->first();
-            $stockData = DB::table('stock')
-                ->join('master_data', 'stock.master_id', '=', 'master_data.id')
-                ->where('stock.id', '=', $category->stock_id)
-                ->select('stock.*', 'master_data.sku', 'master_data.product_name')
-                ->first();
-            if ($category) {
-                return response()->json([
-                    'code' => 200,
-                    'message' => 'Data dengan kategori dan tags tersebut sudah ada, apakah anda yakin ingin menggabungkan keduanya?',
-                    'stock' => [
-                        'id' => $category->stock_id,
-                        'data' => $stockData,
-                        'quantity' => Stock::find($category->stock_id)->quantity,
-                        'price' => Stock::find($category->stock_id)->price,
-                    ],
-                ], 200);
-            } else {
-                return response()->json([
-                    'code' => 404,
-                    'message' => 'Data dengan kategori tersebut belum tersedia, anda dapat membuatnya.',
-                ], 404);
-            }
-        } catch (\Exception $e) {
+        $productData = $request->validated();
+        $tags = $productData['tags'] ?? [];
+        $categoryQuery = DB::table('selected_stock_category')
+            ->join('stock', 'selected_stock_category.stock_id', '=', 'stock.id')
+            ->join('master_data', 'stock.master_id', '=', 'master_data.id')
+            ->select('selected_stock_category.stock_id as stock_id')
+            ->where('master_data.sku', '=', $productData['sku'])
+            ->where('selected_stock_category.category_id', '=', $productData['category_id'])
+            ->whereExists(function ($query) use ($tags) {
+                $query->select(DB::raw(1))
+                    ->from('selected_stock_category as spc')
+                    ->whereColumn('spc.stock_id', 'selected_stock_category.stock_id')
+                    ->whereIn('spc.tag_id', $tags)
+                    ->groupBy('spc.stock_id')
+                    ->havingRaw('COUNT(DISTINCT spc.tag_id) = ?', [count($tags)])
+                    ->havingRaw('COUNT(DISTINCT spc.tag_id) = (SELECT COUNT(DISTINCT tag_id) FROM selected_stock_category WHERE stock_id = spc.stock_id)');
+            });
+        $category = $categoryQuery->first();
+        $stockData = DB::table('stock')
+            ->join('master_data', 'stock.master_id', '=', 'master_data.id')
+            ->where('stock.id', '=', $category->stock_id)
+            ->select('stock.*', 'master_data.sku', 'master_data.product_name')
+            ->first();
+        if ($category) {
+            return response()->json([
+                'code' => 200,
+                'message' => 'Data dengan kategori dan tags tersebut sudah ada, apakah anda yakin ingin menggabungkan keduanya?',
+                'stock' => [
+                    'id' => $category->stock_id,
+                    'data' => $stockData,
+                    'quantity' => Stock::find($category->stock_id)->quantity,
+                    'price' => Stock::find($category->stock_id)->price,
+                ],
+            ], 200);
+        } else {
             return response()->json([
                 'code' => 404,
                 'message' => 'Data dengan kategori tersebut belum tersedia, anda dapat membuatnya.',
@@ -169,6 +162,7 @@ class StockController extends Controller
             'appTitle' => 'Stock',
             'nameUser' => $request->user()->name,
             'roleUser' => $request->user()->role,
+            'search' => request('search'),
             'products' => $groupedProducts,
             'allCategory' => $transformedCategoriesArray,
             'allTag' => $transformedTagsArray,
@@ -426,7 +420,8 @@ class StockController extends Controller
                 'action' => 'move',
                 'category' => 'stock',
                 'sku' => $masterData->sku,
-                'keterangan' => 'Produk dengan SKU: ' . $masterData->sku . ', Kategori: ' . $updateProductionCategory[0]->category_name . ', Tags: (' . implode(', ', $listTag->toArray()) . '), dan Harga: ' . $harga  . '. Berhasil dipindahkan ke Delivery dengan Jumlah: ' . $productData['quantity'] . '.'
+                // Produk dengan SKU: BOT001, Kategori: Cap, Tags: (Sortir, Assembling, Repacking), dan Harga: Rp20.000. Berhasil dipindahkan ke Delivery dengan No Invoice: TKI_10010105, dan Jumlah: 2.
+                'keterangan' => 'Produk dengan SKU: ' . $masterData->sku . ', Kategori: ' . $updateProductionCategory[0]->category_name . ', Tags: (' . implode(', ', $listTag->toArray()) . '), dan Harga: ' . $harga  . '. Berhasil dipindahkan ke Delivery dengan Nomor Invoice: ' . $productData['invoice'] . ', dan Jumlah: ' . $productData['quantity'] . '.'
             ]);
             DB::commit();
             return redirect()->route('delivery.show')->with('success', 'Product berhasil dipindahkan ke delivery.');

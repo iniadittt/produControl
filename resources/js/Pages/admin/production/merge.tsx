@@ -55,6 +55,7 @@ export default function ProductMergeDashboard({
     const subTitle: string = appTitleArray.join(" ");
     const titleRev: string = subTitle + " " + title;
 
+    const [dataExistName, setDataExistName] = useState<boolean>(false);
     const [dataExist, setDataExist] = useState<boolean>(false);
     const [tags, setTags] = useState<{ id: number; name: string }[]>([]);
     const [errorMergeList, setErrorMergeList] = useState("");
@@ -161,7 +162,6 @@ export default function ProductMergeDashboard({
         isNull.length > 0
             ? setErrorMergeList("Merge list masih ada yang kosong")
             : setErrorMergeList("");
-
         const productionIdList = mergeList
             .map((list) => list.production_id)
             .join(",");
@@ -178,7 +178,7 @@ export default function ProductMergeDashboard({
         return;
     }, [mergeList]);
 
-    const debouncedSku = useMemo(() => {
+    const debouncedName = useMemo(() => {
         return setTimeout(() => {
             axios
                 .get(route("api.product.name"), {
@@ -187,19 +187,29 @@ export default function ProductMergeDashboard({
                     },
                 })
                 .then((response: any) => {
-                    setDataExist(response.status === 200);
+                    changeCategoryId(response.data.data.category[0].id);
+                    setDataExistName(response.status === 200);
                     setData((prev) => ({
                         ...prev,
                         name: response.data.data.name,
                     }));
                 })
                 .catch(() => {
-                    setDataExist(false);
+                    setDataExistName(false);
                     setData((prev) => ({
                         ...prev,
                         name: "",
                     }));
                 });
+        }, 2000);
+    }, [data.sku]);
+
+    useEffect(() => {
+        return () => clearTimeout(debouncedName);
+    }, [debouncedName]);
+
+    const debouncedSku = useMemo(() => {
+        return setTimeout(() => {
             axios
                 .get(route("api.stock.check.product.exist"), {
                     params: {
@@ -212,7 +222,7 @@ export default function ProductMergeDashboard({
                     setDataExist(response.status === 200);
                     setData((prev) => ({
                         ...prev,
-                        price: response.data.stock.price,
+                        price: response.data.stock.price || 0,
                     }));
                 })
                 .catch(() => {
@@ -222,8 +232,8 @@ export default function ProductMergeDashboard({
                         price: 0,
                     }));
                 });
-        }, 1000);
-    }, [data.sku, data.category_id, data.tags]);
+        }, 2000);
+    }, [data.category_id, data.tags]);
 
     useEffect(() => {
         return () => clearTimeout(debouncedSku);
@@ -307,16 +317,24 @@ export default function ProductMergeDashboard({
                             type="text"
                             id="name"
                             placeholder="Product Name"
-                            disabled
-                            className="font-semibold bg-gray-300"
-                            value={data.name || "-"}
+                            disabled={dataExistName}
+                            onChange={(
+                                event: React.ChangeEvent<HTMLInputElement>
+                            ) => setData("name", event.target.value)}
+                            className={`${
+                                dataExistName && "font-semibold bg-gray-300"
+                            }`}
+                            value={data.name || ""}
                         />
                         <InputError message={errors.name} className="mt-2" />
                     </div>
 
                     <div className="grid w-full lg:max-w-lg items-center gap-2">
                         <Label htmlFor="category">Kategori</Label>
-                        <Select onValueChange={changeCategoryId}>
+                        <Select
+                            onValueChange={changeCategoryId}
+                            value={data.category_id?.toString()}
+                        >
                             <SelectTrigger>
                                 <SelectValue placeholder="Pilih kategori produk" />
                             </SelectTrigger>

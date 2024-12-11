@@ -34,11 +34,20 @@ class ProductionController extends Controller
             ->select('product_name')
             ->where('sku', $productData['sku'])
             ->first();
+        $stockCategory = DB::table('selected_stock_category as ssc')
+            ->join('category', 'ssc.category_id', '=', 'category.id')
+            ->join('stock', 'ssc.stock_id', '=', 'stock.id')
+            ->join('master_data', 'stock.master_id', '=', 'master_data.id')
+            ->where('master_data.sku', $productData['sku'])
+            ->select('category.id', 'category.name')
+            ->distinct()
+            ->get();
         if ($product) {
             return response()->json([
                 'code' => 200,
                 'data' => [
                     'name' => $product->product_name,
+                    'category' => $stockCategory
                 ],
             ], 200);
         } else {
@@ -226,6 +235,7 @@ class ProductionController extends Controller
             'appTitle' => 'Production',
             'nameUser' => $request->user()->name,
             'roleUser' => $request->user()->role,
+            'search' => request('search'),
             'products' => $groupedProducts,
             'allCategory' => $transformedCategoriesArray,
             'allTag' => $transformedTagsArray,

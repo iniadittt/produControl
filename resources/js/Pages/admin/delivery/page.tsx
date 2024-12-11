@@ -3,6 +3,7 @@ import { PageProps } from "@/types";
 import { Head, usePage } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import { DataTableDelivery } from "@/Components/datatable/DataTableDelivery";
+import { saveData, getData } from "@/lib/indexedDb";
 
 interface FlashType extends PageProps {
     flash: {
@@ -29,6 +30,8 @@ export default function DeliveryDashboard({
     appTitle,
     nameUser,
     roleUser,
+    search,
+    isSku = false,
     products,
     allCategory,
 }: PageProps<{
@@ -36,6 +39,8 @@ export default function DeliveryDashboard({
     appTitle: string;
     nameUser: string;
     roleUser: string;
+    search: string;
+    isSku: boolean;
     products: Product[];
     allCategory: { value: string; label: string }[];
 }>) {
@@ -54,18 +59,45 @@ export default function DeliveryDashboard({
         });
     }, [flash]);
 
+    // useEffect(() => {
+    //     const dataProduction = products.map((product, index) => ({
+    //         ...product,
+    //         no: index + 1,
+    //         sku: product.sku,
+    //         nama_produk: product.product_name,
+    //         kategori: product.category_name,
+    //         jumlah: product.product_quantity,
+    //         total_harga: product.product_price,
+    //     }));
+    //     setData(dataProduction);
+    // }, []);
+
     useEffect(() => {
-        const dataProduction = products.map((product, index) => ({
-            ...product,
-            no: index + 1,
-            sku: product.sku,
-            nama_produk: product.product_name,
-            kategori: product.category_name,
-            jumlah: product.product_quantity,
-            total_harga: product.product_price,
-        }));
-        setData(dataProduction);
-    }, []);
+        const saveToIndexedDB = async () => {
+            const dataProduction = products.map((product, index) => ({
+                ...product,
+                no: index + 1,
+                sku: product.sku,
+                nama_produk: product.product_name,
+                kategori: product.category_name,
+                jumlah: product.product_quantity,
+                total_harga: product.product_price,
+            }));
+            await saveData("delivery", dataProduction);
+            setData(dataProduction);
+        };
+
+        const fetchFromIndexedDB = async () => {
+            const storedData = await getData("delivery");
+            if (storedData.length > 0) {
+                setData(storedData);
+            } else {
+                saveToIndexedDB();
+            }
+        };
+
+        fetchFromIndexedDB();
+    }, [products]);
 
     return (
         <AdminLayout
@@ -93,6 +125,8 @@ export default function DeliveryDashboard({
                     data={data}
                     role={roleUser}
                     allCategory={allCategory}
+                    search={search}
+                    isSku={isSku}
                 />
             </div>
         </AdminLayout>

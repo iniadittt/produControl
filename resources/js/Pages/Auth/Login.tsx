@@ -83,7 +83,10 @@ export default function Login() {
                                         }
                                     />
                                 </div>
-                                <Button type="submit" className="w-full">
+                                <Button
+                                    type="submit"
+                                    className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer duration-300 hover:duration-300 text-white font-medium"
+                                >
                                     Masuk
                                 </Button>
                             </div>

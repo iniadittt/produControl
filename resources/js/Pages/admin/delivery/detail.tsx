@@ -165,7 +165,7 @@ export default function DeliveryDetailDashboard({
                     </div>
 
                     <div className="grid w-full max-w-sm items-center gap-2">
-                        <Label htmlFor="name">Harga Satuan Pada Stock</Label>
+                        <Label htmlFor="name">Harga Satuan</Label>
                         <Input
                             type="text"
                             id="name"

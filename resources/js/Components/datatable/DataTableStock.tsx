@@ -263,9 +263,13 @@ export const columns: ColumnDef<Product>[] = [
         },
         cell: ({ row }) => (
             <div className="capitalize">
-                {row.getValue("jumlah") == 0
-                    ? "Out of stock"
-                    : row.getValue("jumlah")}
+                {row.getValue("jumlah") == 0 ? (
+                    <Badge className="bg-red-600 hover:bg-red-700 cursor-pointer">
+                        Out of stock
+                    </Badge>
+                ) : (
+                    row.getValue("jumlah")
+                )}
             </div>
         ),
         filterFn: customJumlahFilter,
@@ -458,11 +462,13 @@ export function DataTableStock({
     role,
     allCategory: ALLCATEGORY,
     allTag: ALLTAG,
+    search,
 }: {
     data: Product[];
     role: string;
     allCategory: { value: string; label: string }[];
     allTag: { value: string; label: string }[];
+    search: string;
 }) {
     const QUANTITY_PRODUCT = data
         .map((item) => item.product_quantity)
@@ -500,6 +506,10 @@ export function DataTableStock({
     const searchMaxHarga = React.useRef<HTMLInputElement>(null);
 
     React.useEffect(() => {
+        if (search) setFilterName("sku");
+    }, []);
+
+    React.useEffect(() => {
         if (searchSku.current) searchSku.current.value = "";
         if (searchName.current) searchName.current.value = "";
         if (searchCategory.current) searchCategory.current.value = "";
@@ -516,6 +526,8 @@ export function DataTableStock({
         table.getColumn("tags")?.setFilterValue("");
         table.getColumn("jumlah")?.setFilterValue(["", ""]);
         table.getColumn("harga")?.setFilterValue(["", ""]);
+
+        if (search) table.getColumn("sku")?.setFilterValue(search);
     }, [filterName]);
 
     const table = useReactTable({
@@ -546,7 +558,7 @@ export function DataTableStock({
     });
 
     return (
-        <div className="w-full">
+        <div className="grid grid-cols-1">
             <div className="flex items-center mb-4">
                 <div className="flex flex-col gap-2 w-full">
                     <Select
@@ -858,6 +870,26 @@ export function DataTableStock({
                         {table.getFilteredRowModel().rows.length} Total data
                         stock dengan jumlah {QUANTITY_PRODUCT} product.
                     </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                    <div className="space-x-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            Sebelumnya
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            Selanjutnya
+                        </Button>
+                    </div>
                     <div className="text-sm text-muted-foreground">
                         Page{" "}
                         <span className="font-semibold">
@@ -865,24 +897,6 @@ export function DataTableStock({
                         </span>{" "}
                         dari {table.getPageCount()}.
                     </div>
-                </div>
-                <div className="space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Sebelumnya
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Selanjutnya
-                    </Button>
                 </div>
             </div>
         </div>

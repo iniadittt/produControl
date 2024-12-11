@@ -14,6 +14,7 @@ use Inertia\Inertia;
 use App\Models\Delivery;
 use App\Models\Logging;
 use App\Models\MasterData;
+use App\Models\Production;
 use App\Models\Stock;
 use App\Models\Tag;
 use Illuminate\Support\Facades\Redirect;
@@ -23,7 +24,6 @@ class DeliveryController extends Controller
 {
     public function api_get_tujuan(DeliveryApiGetTujuanRequest $request)
     {
-
         $productData = $request->validated();
         if ($productData['tujuan'] == 'production') {
             $PRODUCTION = DB::table('selected_production_category')
@@ -44,14 +44,14 @@ class DeliveryController extends Controller
                     'production.created_at',
                     'production.updated_at'
                 )
-                ->where('category.type', '=', 'stock')
+                ->where('category.type', '=', 'production')
                 ->where('master_data.sku', '=', $productData['sku'])
                 ->get();
             $groupedProducts = [];
             foreach ($PRODUCTION as $product) {
                 if (!isset($groupedProducts[$product->production_id])) {
                     $groupedProducts[$product->production_id] = [
-                        'production_id' => $product->production_id,
+                        'tujuan_id' => $product->production_id,
                         'master_id' => $product->master_id,
                         'product_name' => $product->product_name,
                         'sku' => $product->sku,
@@ -110,7 +110,7 @@ class DeliveryController extends Controller
             foreach ($STOCK as $product) {
                 if (!isset($groupedProducts[$product->stock_id])) {
                     $groupedProducts[$product->stock_id] = [
-                        'stock_id' => $product->stock_id,
+                        'tujuan_id' => $product->stock_id,
                         'master_id' => $product->master_id,
                         'product_name' => $product->product_name,
                         'sku' => $product->sku,
@@ -218,6 +218,8 @@ class DeliveryController extends Controller
             'appTitle' => 'Delivery',
             'nameUser' => $request->user()->name,
             'roleUser' => $request->user()->role,
+            'search' => request('search'),
+            'isSku' => request('isSku'),
             'products' => $groupedProducts,
             'allCategory' => $transformedCategoriesArray,
         ]);
@@ -429,45 +431,91 @@ class DeliveryController extends Controller
     {
         try {
             $productData = $request->validated();
+            $tujuan = $productData['tujuan'];
             DB::beginTransaction();
-            $delivery = Delivery::find($productData['delivery_id']);
-            if (!$delivery) {
-                DB::rollBack();
-                return Redirect::route('delivery.show')->with('error', 'Data delivery tidak ada.');
+
+            if ($tujuan == 'stock') {
+                $delivery = Delivery::find($productData['delivery_id']);
+                if (!$delivery) {
+                    DB::rollBack();
+                    return Redirect::route('delivery.show')->with('error', 'Data delivery tidak ada.');
+                }
+                $stock = Stock::find($productData['tujuan_id']);
+                if (!$stock) {
+                    DB::rollBack();
+                    return Redirect::route('delivery.show')->with('error', 'Data stock tujuan tidak ada.');
+                }
+                if ($delivery->quantity < $productData['quantity']) {
+                    DB::rollBack();
+                    return Redirect::route('delivery.show')->with('error', 'Jumlah retur melebihi quantity delivery.');
+                }
+                $quantitySaatIni = $delivery->quantity;
+                $hargaSatuan = ($delivery->total_price / $delivery->quantity);
+                $harga = 'Rp' . number_format($hargaSatuan * $productData['quantity'], 0, ',', '.');
+                $delivery->quantity -= $productData['quantity'];
+                $delivery->total_price = ($quantitySaatIni - $productData['quantity']) * $hargaSatuan;
+                $delivery->save();
+                $stock->quantity += $productData['quantity'];
+                $stock->save();
+                $masterData = MasterData::find($delivery->master_id);
+                $category = Category::find($productData['category_id']);
+                $tags = [];
+                foreach ($productData['tags'] as $tagId) {
+                    $tag = Tag::find($tagId);
+                    $tags[] = $tag->name;
+                }
+                Logging::create([
+                    'user_id' => $request->user()->id,
+                    'action' => 'retur',
+                    'category' => 'delivery',
+                    'sku' => $masterData->sku,
+                    'keterangan' => $productData['quantity'] . ' Produk berhasil di retur ke Stock dengan SKU: ' . $masterData->sku . ', Kategori: ' . $category->name . ', Tags: (' . implode(', ', $tags) . '), dan Harga: ' . $harga . '.'
+                ]);
+                DB::commit();
+                return Redirect::route('delivery.show')->with('success', 'Delivery berhasil diretur ke stock.');
             }
-            $stock = Stock::find($productData['stock_id']);
-            if (!$stock) {
-                DB::rollBack();
-                return Redirect::route('delivery.show')->with('error', 'Data stock tujuan tidak ada.');
+
+            if ($tujuan == 'production') {
+                $delivery = Delivery::find($productData['delivery_id']);
+                if (!$delivery) {
+                    DB::rollBack();
+                    return Redirect::route('delivery.show')->with('error', 'Data delivery tidak ada.');
+                }
+                $production = Production::find($productData['tujuan_id']);
+                if (!$production) {
+                    DB::rollBack();
+                    return Redirect::route('delivery.show')->with('error', 'Data stock tujuan tidak ada.');
+                }
+                if ($delivery->quantity < $productData['quantity']) {
+                    DB::rollBack();
+                    return Redirect::route('delivery.show')->with('error', 'Jumlah retur melebihi quantity delivery.');
+                }
+                $quantitySaatIni = $delivery->quantity;
+                $hargaSatuan = ($delivery->total_price / $delivery->quantity);
+                $harga = 'Rp' . number_format($hargaSatuan * $productData['quantity'], 0, ',', '.');
+                $delivery->quantity -= $productData['quantity'];
+                $delivery->total_price = ($quantitySaatIni - $productData['quantity']) * $hargaSatuan;
+                $delivery->save();
+                $production->quantity += $productData['quantity'];
+                $production->save();
+                $masterData = MasterData::find($delivery->master_id);
+                $category = Category::find($productData['category_id']);
+                $tags = [];
+                foreach ($productData['tags'] as $tagId) {
+                    $tag = Tag::find($tagId);
+                    $tags[] = $tag->name;
+                }
+                Logging::create([
+                    'user_id' => $request->user()->id,
+                    'action' => 'retur',
+                    'category' => 'delivery',
+                    'sku' => $masterData->sku,
+                    'keterangan' => $productData['quantity'] . ' Produk berhasil di retur ke Production dengan SKU: ' . $masterData->sku . ', Kategori: ' . $category->name . ', Tags: (' . implode(', ', $tags) . '), dan Harga: ' . $harga . '.'
+                ]);
+                DB::commit();
+                return Redirect::route('delivery.show')->with('success', 'Delivery berhasil diretur ke production.');
             }
-            if ($delivery->quantity < $productData['quantity']) {
-                DB::rollBack();
-                return Redirect::route('delivery.show')->with('error', 'Jumlah retur melebihi quantity delivery.');
-            }
-            $quantitySaatIni = $delivery->quantity;
-            $hargaSatuan = ($delivery->total_price / $delivery->quantity);
-            $harga = 'Rp' . number_format($hargaSatuan * $productData['quantity'], 0, ',', '.');
-            $delivery->quantity -= $productData['quantity'];
-            $delivery->total_price = ($quantitySaatIni - $productData['quantity']) * $hargaSatuan;
-            $delivery->save();
-            $stock->quantity += $productData['quantity'];
-            $stock->save();
-            $masterData = MasterData::find($delivery->master_id);
-            $category = Category::find($productData['category_id']);
-            $tags = [];
-            foreach ($productData['tags'] as $tagId) {
-                $tag = Tag::find($tagId);
-                $tags[] = $tag->name;
-            }
-            Logging::create([
-                'user_id' => $request->user()->id,
-                'action' => 'retur',
-                'category' => 'delivery',
-                'sku' => $masterData->sku,
-                'keterangan' => $productData['quantity'] . ' Produk berhasil di retur ke Stock dengan SKU: ' . $masterData->sku . ', Kategori: ' . $category->name . ', Tags: (' . implode(', ', $tags) . '), dan Harga: ' . $harga . '.'
-            ]);
-            DB::commit();
-            return Redirect::route('delivery.show')->with('success', 'Delivery berhasil diretur.');
+            return Redirect::route('delivery.show')->with('error', 'Tujuan retur tidak ada.');
         } catch (\Exception $e) {
             DB::rollBack();
             return Redirect::route('delivery.show')->with('error', 'Terjadi kesalahan saat mengubah data delivery.');
@@ -498,7 +546,7 @@ class DeliveryController extends Controller
                 'action' => 'edit',
                 'category' => 'delivery',
                 'sku' => $masterData->sku,
-                'keterangan' => 'Produk dengan SKU ' . $masterData->sku . ', Nomor Resi: ' . $dataSaatIniInvoice . ', Status Pengiriman: ' . $dataSaatIniStatus . ', dan Jumlah: ' . $dataSaatIniJumlah . '. Berhasil diubah menjadi Nomor Resi: ' . $productData['invoice'] . ', Status Pengiriman: ' . ucwords($productData['status_pengiriman']) . ', dan Jumlah: ' . $productData['quantity'] . '.'
+                'keterangan' => 'Produk dengan SKU ' . $masterData->sku . ', Nomor  Invoice: ' . $dataSaatIniInvoice . ', Status Pengiriman: ' . $dataSaatIniStatus . ', dan Jumlah: ' . $dataSaatIniJumlah . '. Berhasil diubah menjadi Nomor  Invoice: ' . $productData['invoice'] . ', Status Pengiriman: ' . ucwords($productData['status_pengiriman']) . ', dan Jumlah: ' . $productData['quantity'] . '.'
             ]);
             DB::commit();
             return Redirect::route('delivery.show')->with('success', 'Delivery berhasil diubah.');
@@ -531,7 +579,7 @@ class DeliveryController extends Controller
                 'action' => 'hapus',
                 'category' => 'delivery',
                 'sku' => $masterData->sku,
-                'keterangan' => 'Produk dengan SKU: ' . $masterData->sku . ' dan Nomor Resi: ' . $delivery->invoice . ' telah dihapus.'
+                'keterangan' => 'Produk dengan SKU: ' . $masterData->sku . ' dan Nomor  Invoice: ' . $delivery->invoice . ' telah dihapus.'
             ]);
             $delivery->delete();
             DB::commit();

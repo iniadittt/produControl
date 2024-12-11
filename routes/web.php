@@ -16,7 +16,7 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
-});
+})->name('home');
 
 Route::group(['prefix' => 'dashboard', 'middleware' => ['auth', 'verified']], function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard.show');
@@ -64,7 +64,7 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['auth', 'verified']], fu
     });
 
     Route::group(['prefix' => 'delivery'], function () {
-        Route::get('/api/produt-tujuan', [DeliveryController::class, 'api_get_tujuan'])->name('api.delivery.retur.tujuan');
+        Route::get('/api/tujuan', [DeliveryController::class, 'api_get_tujuan'])->name('api.delivery.retur.tujuan');
         Route::get('/', [DeliveryController::class, 'show'])->name('delivery.show');
         Route::get('/detail', [DeliveryController::class, 'detail'])->name('delivery.detail.show');
         Route::get('/delete', [DeliveryController::class, 'delete'])->name('delivery.delete.show');

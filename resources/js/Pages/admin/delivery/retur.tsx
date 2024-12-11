@@ -38,7 +38,7 @@ interface Tag {
 }
 
 interface ProductTujuanItem {
-    stock_id: number;
+    tujuan_id: number;
     master_id: number;
     product_name: string;
     sku: string;
@@ -65,7 +65,6 @@ export default function DeliveryReturDashboard({
     delivery: Delivery;
     stock: ProductTujuanItem[];
 }>) {
-    console.log({ stock });
     const appTitleArray: string[] = appTitle.split(" ");
     const title: string | undefined = appTitleArray.shift();
     const subTitle: string = appTitleArray.join(" ");
@@ -73,70 +72,66 @@ export default function DeliveryReturDashboard({
 
     const [categoryName, setCategoryName] = useState<string>("");
     const [listTag, setListTag] = useState<string[]>([]);
-    const [tujuan, setTujuan] = useState<"production" | "stock" | "">("");
-
     const [productTujuan, setProductTujuan] = useState<ProductTujuanItem[]>([]);
 
     const { data, setData, reset, errors, processing, patch } = useForm<{
         delivery_id: number;
-        stock_id: number | null;
+        tujuan_id: number | null;
         category_id: number | null;
+        tujuan: "production" | "stock" | "";
         tags: number[];
         quantity: number;
     }>({
         delivery_id: delivery.delivery_id,
-        stock_id: null,
+        tujuan_id: null,
         category_id: null,
+        tujuan: "",
         tags: [],
         quantity: 0,
     });
 
     const changeStockId = (value: string) => {
-        const [stock_id, category_id, itemTags, listTagName, category_name] =
+        const [tujuan_id, category_id, itemTags, listTagName, category_name] =
             value.split("-");
         const listTag = itemTags
             .split(", ")
             .map((tag: string) => parseInt(tag, 10))
             .filter((tag: number) => !isNaN(tag));
-        const stockIdNumber = parseInt(stock_id, 10) || null;
+        const tujuanIdNumber = parseInt(tujuan_id, 10) || null;
         const categoryIdNumber = parseInt(category_id, 10) || null;
         setCategoryName(category_name);
         setListTag(listTagName.split(", "));
         setData((prev) => ({
             ...prev,
-            stock_id: stockIdNumber,
+            tujuan_id: tujuanIdNumber,
             category_id: categoryIdNumber,
             tags: listTag,
         }));
     };
 
-    console.log({ tujuan });
-
     useEffect(() => {
-        console.log({ DELIVERY: delivery });
-        console.log({ tujuan });
+        setProductTujuan([]);
         axios
-            .get("/dashboard/delivery/api/produt-tujuan", {
+            .get(route("api.delivery.retur.tujuan"), {
                 params: {
                     sku: delivery.sku,
-                    tujuan,
+                    tujuan: data.tujuan,
                 },
             })
             .then((response: any) => {
-                console.log(response.status);
-                // setProductTujuan((prev) => ({
-                //     ...prev,
-                //     [...response.data.]
-                // }))
+                setProductTujuan(response.data.data);
+            })
+            .catch(() => {
+                setProductTujuan([]);
             });
-    }, [tujuan]);
+    }, [data.tujuan]);
 
     const submit = (e: any) => {
         e.preventDefault();
-        // patch(route("delivery.retur.update"), {
-        //     onSuccess: () =>
-        //         reset("category_id", "stock_id", "tags", "quantity"),
-        // });
+        patch(route("delivery.retur.update"), {
+            onSuccess: () =>
+                reset("category_id", "tujuan_id", "tujuan", "tags", "quantity"),
+        });
     };
 
     const formatCurrency = (value: any) => {
@@ -205,7 +200,7 @@ export default function DeliveryReturDashboard({
                         <Label htmlFor="tujuan">Tujuan Retur</Label>
                         <Select
                             onValueChange={(value: "production" | "stock") =>
-                                setTujuan(value)
+                                setData("tujuan", value)
                             }
                         >
                             <SelectTrigger>
@@ -234,7 +229,9 @@ export default function DeliveryReturDashboard({
                         <Label htmlFor="category">Pilih Produk Tujuan</Label>
                         <Select
                             onValueChange={changeStockId}
-                            disabled={!tujuan}
+                            disabled={
+                                !data.tujuan || productTujuan.length === 0
+                            }
                         >
                             <SelectTrigger>
                                 <SelectValue placeholder="Pilih produk tujuan" />
@@ -255,7 +252,7 @@ export default function DeliveryReturDashboard({
                                             return (
                                                 <SelectItem
                                                     key={index}
-                                                    value={`${item.stock_id}-${item.category_id}-${listIdTag}-${listTag}-${item.category_name}`}
+                                                    value={`${item.tujuan_id}-${item.category_id}-${listIdTag}-${listTag}-${item.category_name}`}
                                                     className="capitalize cursor-pointer"
                                                 >
                                                     {`${item.sku} - ${item.product_name} - Kategori: ${item.category_name} - Tags: ${listTag}`}
@@ -378,7 +375,7 @@ export default function DeliveryReturDashboard({
                         disabled={
                             processing ||
                             !data.category_id ||
-                            !data.stock_id ||
+                            !data.tujuan_id ||
                             data.quantity === 0
                         }
                         className={`inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900 ${

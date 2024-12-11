@@ -409,10 +409,14 @@ export function DataTableDelivery({
     data,
     role,
     allCategory: ALLCATEGORY,
+    search,
+    isSku,
 }: {
     data: Product[];
     role: string;
     allCategory: CatTagType[];
+    search: string;
+    isSku: boolean;
 }) {
     const QUANTITY_PRODUCT = data
         .map((item) => item.product_quantity)
@@ -446,6 +450,11 @@ export function DataTableDelivery({
     const searchMaxHarga = React.useRef<HTMLInputElement>(null);
 
     React.useEffect(() => {
+        if (isSku) return setFilterName("sku");
+        if (search) return setFilterName("invoice");
+    }, []);
+
+    React.useEffect(() => {
         if (searchInvoice.current) searchInvoice.current.value = "";
         if (searchSku.current) searchSku.current.value = "";
         if (searchName.current) searchName.current.value = "";
@@ -464,6 +473,9 @@ export function DataTableDelivery({
         table.getColumn("status_pengiriman")?.setFilterValue("");
         table.getColumn("jumlah")?.setFilterValue(["", ""]);
         table.getColumn("total_harga")?.setFilterValue(["", ""]);
+
+        if (isSku) return table.getColumn("sku")?.setFilterValue(search);
+        if (search) return table.getColumn("invoice")?.setFilterValue(search);
     }, [filterName]);
 
     const table = useReactTable({
@@ -493,7 +505,7 @@ export function DataTableDelivery({
     });
 
     return (
-        <div className="w-full">
+        <div className="grid grid-cols-1">
             <div className="flex items-center mb-4">
                 <div className="flex flex-col gap-2 w-1/2">
                     <Select
@@ -529,7 +541,7 @@ export function DataTableDelivery({
 
                     {filterName === "invoice" && (
                         <Input
-                            placeholder="Cari delivery berdasarkan nomor invoice..."
+                            placeholder="Cari delivery berdasarkan invoice..."
                             ref={searchInvoice}
                             value={
                                 (table
@@ -595,22 +607,6 @@ export function DataTableDelivery({
                                     ?.setFilterValue(value)
                             }
                         />
-                        // <Input
-                        //     placeholder="Cari kategori berdasarkan nama kategori..."
-                        //     ref={searchCategory}
-                        //     value={
-                        //         (table
-                        //             .getColumn("kategori")
-                        //             ?.getFilterValue() as string) || ""
-                        //     }
-                        //     onChange={(event) => {
-                        //         const value = event.target.value;
-                        //         table
-                        //             .getColumn("kategori")
-                        //             ?.setFilterValue(value);
-                        //     }}
-                        //     className="max-w-full"
-                        // />
                     )}
 
                     {filterName === "status_pengiriman" && (
@@ -851,6 +847,26 @@ export function DataTableDelivery({
                         {table.getFilteredRowModel().rows.length} Total data
                         delivery dengan jumlah {QUANTITY_PRODUCT} product.
                     </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                    <div className="space-x-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            Sebelumnya
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            Selanjutnya
+                        </Button>
+                    </div>
                     <div className="text-sm text-muted-foreground">
                         Page{" "}
                         <span className="font-semibold">
@@ -858,24 +874,6 @@ export function DataTableDelivery({
                         </span>{" "}
                         dari {table.getPageCount()}.
                     </div>
-                </div>
-                <div className="space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Sebelumnya
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Selanjutnya
-                    </Button>
                 </div>
             </div>
         </div>
