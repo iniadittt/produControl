@@ -108,7 +108,9 @@ export default function CategoryDetailDashboard({
         >
             <Head title={titleRev} />
             <div className="p-4 pb-0">
-                <h1 className="font-semibold uppercase">{titleRev}</h1>
+                <h1 className="font-semibold uppercase">
+                    {"Ubah Detail Kategori"}
+                </h1>
             </div>
             <div className="p-4">
                 <form onSubmit={submit} className="w-2/3 space-y-6">
@@ -257,7 +259,12 @@ export default function CategoryDetailDashboard({
                                     <ul className="list-disc pl-5">
                                         {listTag.map(
                                             (tag: string, index: number) => (
-                                                <li key={index} className="text-sm">{tag}</li>
+                                                <li
+                                                    key={index}
+                                                    className="text-sm"
+                                                >
+                                                    {tag}
+                                                </li>
                                             )
                                         )}
                                     </ul>

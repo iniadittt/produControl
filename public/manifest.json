@@ -1,0 +1,17 @@
+{
+    "name": "Laravel Package Tutorial",
+    "short_name": "LPT",
+    "description": "Tutorial of Laravel Package",
+    "background_color": "#6777ef",
+    "start_url": "/",
+    "display": "standalone",
+    "theme_color": "#6777ef",
+    "icons": [
+        {
+            "src": "logo.PNG",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}

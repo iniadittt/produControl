@@ -1,5 +1,4 @@
-import React from "react";
-import { Head, Link } from "@inertiajs/react";
+import { Head } from "@inertiajs/react";
 import SiteNav from "@/Components/landing/site-nav";
 import HeroSection from "@/Components/landing/hero-section";
 import FeaturesSection from "@/Components/landing/features-section";

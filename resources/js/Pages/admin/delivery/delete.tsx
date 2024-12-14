@@ -11,6 +11,7 @@ import { useState } from "react";
 interface Delivery {
     category_id: number;
     category_name: string;
+    invoice: string;
     master_id: number;
     sku: string;
     name: string;
@@ -92,6 +93,18 @@ export default function DetailDeliveryDashboard({
             </div>
             <div className="p-4">
                 <form onSubmit={submit} className="w-2/3 space-y-6">
+                    <div className="grid w-full max-w-sm items-center gap-2">
+                        <Label htmlFor="invoice">Nomor Invoice</Label>
+                        <Input
+                            type="text"
+                            id="invoice"
+                            placeholder="Nomor Invoice"
+                            className="bg-gray-300 font-semibold"
+                            value={delivery.invoice}
+                            disabled
+                        />
+                    </div>
+
                     <div className="grid w-full max-w-sm items-center gap-2">
                         <Label htmlFor="sku">SKU</Label>
                         <Input

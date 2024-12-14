@@ -2,7 +2,14 @@ self.addEventListener("install", function (event) {
     event.waitUntil(preLoad());
 });
 
-var filesToCache = ["/", "/offline.html"];
+var filesToCache = [
+    "/",
+    "/offline.html",
+    "/index.html",
+    "/css/app.css",
+    "/js/app.js",
+    "/assets/images/icon.jpg",
+];
 
 var preLoad = function () {
     return caches.open("offline").then(function (cache) {

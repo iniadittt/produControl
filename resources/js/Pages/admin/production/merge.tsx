@@ -55,7 +55,11 @@ export default function ProductMergeDashboard({
     const subTitle: string = appTitleArray.join(" ");
     const titleRev: string = subTitle + " " + title;
 
+    let idCategorySelected: number | null = null;
+
+    const [allCategory, setAllCategory] = useState(categoriesWithTags);
     const [dataExistName, setDataExistName] = useState<boolean>(false);
+    const [nameExist, setNameExist] = useState<string>("");
     const [dataExist, setDataExist] = useState<boolean>(false);
     const [tags, setTags] = useState<{ id: number; name: string }[]>([]);
     const [errorMergeList, setErrorMergeList] = useState("");
@@ -96,10 +100,6 @@ export default function ProductMergeDashboard({
         merge_list: [],
     });
 
-    useEffect(() => {
-        setData("tags", []);
-    }, [data.category_id]);
-
     const submit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         post(
@@ -120,6 +120,10 @@ export default function ProductMergeDashboard({
         );
     };
 
+    useEffect(() => {
+        setData("tags", []);
+    }, [data.category_id]);
+
     const changeTagSelected = (checked: any, tagId: number) => {
         const updatedTags = checked
             ? [...data.tags, tagId]
@@ -128,7 +132,7 @@ export default function ProductMergeDashboard({
     };
 
     const changeCategoryId = (value: any) => {
-        const filteredTags = categoriesWithTags
+        const filteredTags = allCategory
             .map((category) =>
                 category.tags
                     .filter((tag) => tag.category_id === Number(value))
@@ -136,7 +140,7 @@ export default function ProductMergeDashboard({
             )
             .flat();
         setTags(filteredTags);
-        setData("category_id", Number(value));
+        setData("category_id", value ? Number(value) : idCategorySelected);
     };
 
     const changeMergeList = (value: any) => {
@@ -178,8 +182,12 @@ export default function ProductMergeDashboard({
         return;
     }, [mergeList]);
 
-    const debouncedName = useMemo(() => {
-        return setTimeout(() => {
+    useEffect(() => {
+        setData("name", nameExist);
+    }, [nameExist]);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
             axios
                 .get(route("api.product.name"), {
                     params: {
@@ -187,29 +195,42 @@ export default function ProductMergeDashboard({
                     },
                 })
                 .then((response: any) => {
-                    changeCategoryId(response.data.data.category[0].id);
+                    const productData = response.data.data;
+                    setNameExist(productData.name);
                     setDataExistName(response.status === 200);
-                    setData((prev) => ({
-                        ...prev,
-                        name: response.data.data.name,
-                    }));
+                    const categoryExists = response.data.data.category.map(
+                        (item: { id: number; name: string }) => item.id
+                    );
+                    if (categoryExists.length > 0) {
+                        idCategorySelected = categoryExists[0];
+                        const newCategory = categoriesWithTags.filter(
+                            (category) => categoryExists.includes(category.id)
+                        );
+                        const firstItem = categoryExists[0];
+                        if (firstItem) {
+                            setAllCategory(newCategory);
+                            changeCategoryId(firstItem);
+                        }
+                    } else {
+                        setAllCategory(categoriesWithTags);
+                        setData("category_id", null);
+                        setTags([]);
+                    }
                 })
                 .catch(() => {
+                    setAllCategory(categoriesWithTags);
                     setDataExistName(false);
-                    setData((prev) => ({
-                        ...prev,
-                        name: "",
-                    }));
+                    setData("name", "");
                 });
         }, 2000);
-    }, [data.sku]);
+
+        return () => {
+            clearTimeout(timeoutId);
+        };
+    }, [data.sku, categoriesWithTags]);
 
     useEffect(() => {
-        return () => clearTimeout(debouncedName);
-    }, [debouncedName]);
-
-    const debouncedSku = useMemo(() => {
-        return setTimeout(() => {
+        const timeoutId = setTimeout(() => {
             axios
                 .get(route("api.stock.check.product.exist"), {
                     params: {
@@ -233,11 +254,10 @@ export default function ProductMergeDashboard({
                     }));
                 });
         }, 2000);
-    }, [data.category_id, data.tags]);
-
-    useEffect(() => {
-        return () => clearTimeout(debouncedSku);
-    }, [debouncedSku]);
+        return () => {
+            clearTimeout(timeoutId);
+        };
+    }, [data.sku, data.category_id, data.tags]);
 
     useEffect(() => {
         if (countList > mergeList.length) {
@@ -324,7 +344,7 @@ export default function ProductMergeDashboard({
                             className={`${
                                 dataExistName && "font-semibold bg-gray-300"
                             }`}
-                            value={data.name || ""}
+                            value={data.name}
                         />
                         <InputError message={errors.name} className="mt-2" />
                     </div>
@@ -340,7 +360,7 @@ export default function ProductMergeDashboard({
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectGroup>
-                                    {categoriesWithTags.map(
+                                    {allCategory.map(
                                         (category: CategoryWithTagsType) => (
                                             <SelectItem
                                                 key={category.id}

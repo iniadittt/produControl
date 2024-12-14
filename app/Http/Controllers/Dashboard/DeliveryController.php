@@ -308,6 +308,7 @@ class DeliveryController extends Controller
                 'master_data.product_name as name',
                 'delivery.id as id',
                 'delivery.quantity as quantity',
+                'delivery.invoice as invoice',
                 'delivery.total_price as total_price',
                 'stock.price as price',
                 'category.id as category_id',
@@ -325,6 +326,7 @@ class DeliveryController extends Controller
                 'name' => $items->first()->name,
                 'id' => $items->first()->id,
                 'quantity' => $items->first()->quantity,
+                'invoice' => $items->first()->invoice,
                 'total_price' => $items->first()->total_price,
                 'price' => $items->first()->price,
                 'tags' => $items->map(function ($item) {

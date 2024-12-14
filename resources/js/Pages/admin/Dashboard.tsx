@@ -103,16 +103,16 @@ export default function Dashboard({
                     <CardHeader>
                         <CardTitle className="font-normal text-sm grid grid-cols-3">
                             <div className="bg-blue-600 p-4 rounded-full max-w-fit max-h-fit">
-                                <Box className="text-white" />
+                                <Package className="text-white" />
                             </div>
                             <div className="col-span-2 pl-2">
                                 <h1 className="text-4xl font-bold text-right">
                                     {new Intl.NumberFormat("id-ID").format(
-                                        total.keseluruhan
+                                        total.master_data
                                     )}
                                 </h1>
                                 <p className="text-sm text-right">
-                                    Total Kuantitas Produk Keseluruhan
+                                    Total Produk / SKU Yang Terdaftar
                                 </p>
                             </div>
                         </CardTitle>
@@ -161,16 +161,16 @@ export default function Dashboard({
                     <CardHeader>
                         <CardTitle className="font-normal text-sm grid grid-cols-3">
                             <div className="bg-blue-600 p-4 rounded-full max-w-fit max-h-fit">
-                                <Package className="text-white" />
+                                <Box className="text-white" />
                             </div>
                             <div className="col-span-2 pl-2">
                                 <h1 className="text-4xl font-bold text-right">
                                     {new Intl.NumberFormat("id-ID").format(
-                                        total.master_data
+                                        total.keseluruhan
                                     )}
                                 </h1>
                                 <p className="text-sm text-right">
-                                    Total Produk / SKU Yang Terdaftar
+                                    Total Data Produk Keseluruhan
                                 </p>
                             </div>
                         </CardTitle>
@@ -304,7 +304,7 @@ export default function Dashboard({
                                     )}
                                 </h1>
                                 <p className="text-sm text-right">
-                                    Total Pengiriman On Delivered
+                                    Total Pengiriman Delivered
                                 </p>
                             </div>
                         </CardTitle>

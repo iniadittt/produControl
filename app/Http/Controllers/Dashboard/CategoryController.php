@@ -73,7 +73,7 @@ class CategoryController extends Controller
         }
         return Inertia::render('admin/category/detail', [
             'appName' => env('APP_NAME', 'DEFAULT'),
-            'appTitle' => 'Kategori Detail Data',
+            'appTitle' => 'Kategori Ubah Detail Kategori',
             'nameUser' => $request->user()->name,
             'roleUser' => $request->user()->role,
             'category' => $category[0],

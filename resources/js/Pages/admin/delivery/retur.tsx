@@ -161,7 +161,7 @@ export default function DeliveryReturDashboard({
             <div className="p-4">
                 <form onSubmit={submit} className="w-2/3 space-y-6">
                     <div className="grid w-full lg:max-w-lg items-center gap-2">
-                        <Label htmlFor="invoice">Nomor Resi</Label>
+                        <Label htmlFor="invoice">Nomor Invoice</Label>
                         <Input
                             type="text"
                             id="invoice"
