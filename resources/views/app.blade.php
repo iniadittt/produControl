@@ -24,6 +24,52 @@
 
 <body class="font-sans antialiased">
     @inertia
+    <script>
+        let deferredPrompt;
+
+        // Mendaftarkan service worker  
+        if ("serviceWorker" in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register("service-worker.js").then(
+                    (registration) => {
+                        console.log("Service worker registration succeeded:", registration);
+                    },
+                    (error) => {
+                        console.error(`Service worker registration failed: ${error}`);
+                    }
+                );
+            });
+        } else {
+            console.error("Service workers are not supported.");
+        }
+
+        // Menangani event beforeinstallprompt  
+        window.addEventListener('beforeinstallprompt', (event) => {
+            // Mencegah prompt default  
+            event.preventDefault();
+            // Simpan event untuk digunakan nanti  
+            deferredPrompt = event;
+            // Tampilkan tombol instalasi  
+            document.getElementById('install-button').style.display = 'block';
+        });
+
+        // Menangani klik pada tombol instalasi  
+        document.getElementById('install-button').addEventListener('click', () => {
+            if (deferredPrompt) {
+                // Tampilkan prompt instalasi  
+                deferredPrompt.prompt();
+                // Tunggu hasil dari prompt  
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the A2HS prompt');
+                    } else {
+                        console.log('User dismissed the A2HS prompt');
+                    }
+                    deferredPrompt = null; // Reset deferredPrompt  
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

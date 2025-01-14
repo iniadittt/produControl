@@ -1,11 +1,4 @@
-const filesToCache = [
-    "/",
-    "/offline.html",
-    // "/index.html",
-    // "/css/app.css",
-    // "/js/app.js",
-    "/assets/images/icon.jpg",
-];
+const filesToCache = ["/", "/offline.html", "/assets/images/icon.jpg"];
 
 // Preload files into the cache during the service worker installation
 const preLoad = function () {

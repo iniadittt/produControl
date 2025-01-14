@@ -1,16 +1,21 @@
-{
-    "name": "Laravel Package Tutorial",
-    "short_name": "LPT",
-    "description": "Tutorial of Laravel Package",
-    "background_color": "#6777ef",
-    "start_url": "/",
-    "display": "standalone",
-    "theme_color": "#6777ef",
-    "icons": [
-        {
-            "src": "/assets/images/icon.jpg",
-            "sizes": "256xx256",
-            "type": "image/jpeg"
-        }
-    ]
-}
+{  
+    "name": "ProduControl",  
+    "short_name": "ProduControl",  
+    "description": "ProduControl",  
+    "background_color": "#6777ef",  
+    "start_url": "/",  
+    "display": "standalone",  
+    "theme_color": "#6777ef",  
+    "icons": [  
+        {  
+            "src": "/assets/images/icon.jpg",  
+            "sizes": "192x192",  
+            "type": "image/jpeg"  
+        },  
+        {  
+            "src": "/assets/images/icon.jpg",  
+            "sizes": "512x512",  
+            "type": "image/jpeg"  
+        }  
+    ]  
+}  
