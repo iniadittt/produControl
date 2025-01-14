@@ -2,7 +2,7 @@ import { PageProps } from "@/types";
 import AdminLayout from "@/Layouts/AdminLayout";
 import { DataTable } from "@/Components/datatable/DataTableUser";
 import { useState, useEffect } from "react";
-import { saveData, getData } from "@/lib/indexedDb";
+// import { saveData, getData } from "@/lib/indexedDb";
 
 export default function UserDashboard({
     appName,
@@ -19,35 +19,35 @@ export default function UserDashboard({
 }>) {
     const [data, setData] = useState<any>([]);
 
-    // useEffect(() => {
-    //     const dataUsers = users.map((user, index) => ({
-    //         ...user,
-    //         user_id: index + 1,
-    //     }));
-    //     setData(dataUsers);
-    // }, []);
-
     useEffect(() => {
-        const saveToIndexedDB = async () => {
-            const dataUsers = users.map((user, index) => ({
-                ...user,
-                user_id: index + 1,
-            }));
-            await saveData("users", dataUsers);
-            setData(dataUsers);
-        };
+        const dataUsers = users.map((user, index) => ({
+            ...user,
+            user_id: index + 1,
+        }));
+        setData(dataUsers);
+    }, []);
 
-        const fetchFromIndexedDB = async () => {
-            const storedData = await getData("users");
-            if (storedData.length > 0) {
-                setData(storedData);
-            } else {
-                saveToIndexedDB();
-            }
-        };
+    // useEffect(() => {
+    //     const saveToIndexedDB = async () => {
+    //         const dataUsers = users.map((user, index) => ({
+    //             ...user,
+    //             user_id: index + 1,
+    //         }));
+    //         await saveData("users", dataUsers);
+    //         setData(dataUsers);
+    //     };
 
-        fetchFromIndexedDB();
-    }, [users]);
+    //     const fetchFromIndexedDB = async () => {
+    //         const storedData = await getData("users");
+    //         if (storedData.length > 0) {
+    //             setData(storedData);
+    //         } else {
+    //             saveToIndexedDB();
+    //         }
+    //     };
+
+    //     fetchFromIndexedDB();
+    // }, [users]);
 
     return (
         <AdminLayout

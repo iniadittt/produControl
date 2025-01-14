@@ -4,7 +4,7 @@ import AdminLayout from "@/Layouts/AdminLayout";
 import { Card, CardHeader, CardTitle } from "@/Components/ui/Card";
 import { DataTableLogging } from "../../Components/datatable/DataTableLogging";
 import { Box, Package, UsersRound, Truck, NotebookText } from "lucide-react";
-import { saveData, getData } from "@/lib/indexedDb";
+// import { saveData, getData } from "@/lib/indexedDb";
 
 interface Total {
     users: number;
@@ -48,27 +48,27 @@ export default function Dashboard({
 }>) {
     const [data, setData] = useState<any>([]);
 
-    useEffect(() => {
-        const saveToIndexedDB = async () => {
-            const dataLogging = loggingData.map((item: any, index: number) => ({
-                ...item,
-                logging_id: index + 1,
-            }));
-            await saveData("logging", dataLogging);
-            setData(dataLogging);
-        };
+    // useEffect(() => {
+    //     const saveToIndexedDB = async () => {
+    //         const dataLogging = loggingData.map((item: any, index: number) => ({
+    //             ...item,
+    //             logging_id: index + 1,
+    //         }));
+    //         await saveData("logging", dataLogging);
+    //         setData(dataLogging);
+    //     };
 
-        const fetchFromIndexedDB = async () => {
-            const storedData = await getData("logging");
-            if (storedData.length > 0) {
-                setData(storedData);
-            } else {
-                saveToIndexedDB();
-            }
-        };
+    //     const fetchFromIndexedDB = async () => {
+    //         const storedData = await getData("logging");
+    //         if (storedData.length > 0) {
+    //             setData(storedData);
+    //         } else {
+    //             saveToIndexedDB();
+    //         }
+    //     };
 
-        fetchFromIndexedDB();
-    }, [loggingData]);
+    //     fetchFromIndexedDB();
+    // }, [loggingData]);
 
     return (
         <AdminLayout

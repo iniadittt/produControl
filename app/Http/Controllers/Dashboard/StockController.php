@@ -48,7 +48,7 @@ class StockController extends Controller
     public function api_check_production_exist(CheckStockExistRequest $request)
     {
         $productData = $request->validated();
-        $tags = $productData['tags'] ?? [];
+        $tags = $productData['tags'];
         $categoryQuery = DB::table('selected_stock_category')
             ->join('stock', 'selected_stock_category.stock_id', '=', 'stock.id')
             ->join('master_data', 'stock.master_id', '=', 'master_data.id')

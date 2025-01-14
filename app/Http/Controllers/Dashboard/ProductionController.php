@@ -351,11 +351,9 @@ class ProductionController extends Controller
             ->where('c.type', 'production')
             ->select('md.sku', 'md.product_name', 'p.quantity', 'c.name as category_name', 'p.id as production_id')
             ->get();
-
         if ($product->isEmpty()) {
             return Redirect::route('production.show');
         }
-
         $result = $product->groupBy(function ($item) {
             return $item->sku . $item->product_name . $item->quantity . $item->category_name;
         })->map(function ($groupedItems) {
@@ -371,9 +369,8 @@ class ProductionController extends Controller
         $productionData = $result[0];
         $categoriesWithTags = Category::with('tags')
             ->where('name', '=', $productionData['category_name'])
-            ->where('type', '=', 'stock')
+            ->where('type', 'stock')
             ->get();
-
         return Inertia::render('admin/production/move', [
             'appName' => env('APP_NAME', 'DEFAULT'),
             'appTitle' => 'Production Move To Stock',

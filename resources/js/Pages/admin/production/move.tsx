@@ -48,6 +48,15 @@ export default function ProductMoveDashboard({
     product: any;
     categoriesWithTags: CategoryWithTagsType[];
 }>) {
+    console.log({
+        appName,
+        appTitle,
+        nameUser,
+        roleUser,
+        product,
+        categoriesWithTags,
+    });
+
     const appTitleArray: string[] = appTitle.split(" ");
     const title: string | undefined = appTitleArray.shift();
     const subTitle: string = appTitleArray.join(" ");
@@ -67,7 +76,7 @@ export default function ProductMoveDashboard({
     }>({
         production_id: product.production_id,
         sku: product.sku,
-        category_id: categoriesWithTags[0].id,
+        category_id: null,
         tags: [],
         quantity: 0,
         price: 0,
@@ -82,28 +91,30 @@ export default function ProductMoveDashboard({
     }, [data.category_id]);
 
     useEffect(() => {
-        axios
-            .get(route("api.stock.check.product.exist"), {
-                params: {
-                    sku: data.sku,
-                    category_id: data.category_id,
-                    tags: data.tags,
-                },
-            })
-            .then((response: any) => {
-                setDataExist(response.status === 200);
-                setData((prev) => ({
-                    ...prev,
-                    price: response.data.stock.price,
-                }));
-            })
-            .catch(() => {
-                setDataExist(false);
-                setData((prev) => ({
-                    ...prev,
-                    price: 0,
-                }));
-            });
+        if (data.category_id && data.tags.length > 0) {
+            axios
+                .get(route("api.stock.check.product.exist"), {
+                    params: {
+                        sku: data.sku,
+                        category_id: data.category_id,
+                        tags: data.tags,
+                    },
+                })
+                .then((response: any) => {
+                    setDataExist(response.status === 200);
+                    setData((prev) => ({
+                        ...prev,
+                        price: response.data.stock.price || 0,
+                    }));
+                })
+                .catch(() => {
+                    setDataExist(false);
+                    setData((prev) => ({
+                        ...prev,
+                        price: 0,
+                    }));
+                });
+        }
     }, [data.tags]);
 
     const submit = (e: any) => {
