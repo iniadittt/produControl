@@ -46,7 +46,7 @@ export default function Dashboard({
     total: Total;
     loggingData: LogsType[];
 }>) {
-    const [data, setData] = useState<any>([]);
+    const [data, setdata] = useState<any>([]);
 
     // useEffect(() => {
     //     const saveToIndexedDB = async () => {
@@ -313,7 +313,7 @@ export default function Dashboard({
             </div>
             <div className="p-4">
                 <h1 className="text-2xl mb-4 font-semibold">Product Logs</h1>
-                <DataTableLogging data={data} />
+                <DataTableLogging data={loggingData} />
             </div>
         </AdminLayout>
     );
